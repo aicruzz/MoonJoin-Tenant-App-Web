@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="MoonJoin Cloud — Tenant logistics dashboard. Generate APIs, manage deliveries, fund wallets, configure webhooks, monitor analytics.">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="MoonJoin Cloud">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <!--
+    Google Sign-In client ID for MoonJoin Cloud (replace with the new, dedicated
+    Google OAuth client created for the cloud.moonjoin.com origin).
+  -->
+  <!-- <meta name="google-signin-client_id" content="REPLACE_WITH_MJCLOUD_GOOGLE_OAUTH_CLIENT_ID"> -->
+
+  <title>MoonJoin Cloud</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <!--
+    Google Maps JS — load with the MoonJoin Cloud Maps API key (separate from
+    the User App's key). Restrict by HTTP referrer in Google Cloud console.
+    Inject the key per env via build pipeline; the placeholder below is safe
+    to ship empty for local dev when the map picker is not in use.
+  -->
+  <script src="https://maps.googleapis.com/maps/api/js?libraries=places&key="></script>
+
+  <!--
+    Firebase JS SDK for the new dedicated MoonJoin Cloud Firebase project.
+    Replace the firebaseConfig object below with values from the project
+    once it is provisioned. Until then the SDK loads but no init runs.
+  -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+
+  <div class="preloader">
+    <div class="preloader-container">
+      <img width="56" class="preloader-img" src="favicon.png" alt="MoonJoin Cloud">
+      <div class="loader"></div>
+      <p class="preloader-label">MoonJoin Cloud</p>
+    </div>
+  </div>
+
+  <script>
+    // Theme persistence — bind document body class to dark/light to avoid FOUC.
+    if (typeof Storage !== 'undefined') {
+      var theme = localStorage.getItem('flutter.mjcloud_theme');
+      if (theme === 'true') {
+        document.body.classList.add('theme-dark');
+      }
+    }
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
