@@ -17,19 +17,35 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 800), _route);
+    // Allow a brief brand moment, then route. The async call is deliberately
+    // not awaited inside the delayed callback to keep the initial paint snappy.
+    Future.delayed(const Duration(milliseconds: 600), _route);
   }
 
-  void _route() {
+  Future<void> _route() async {
     final splash = Get.find<SplashController>();
     final auth = Get.find<AuthController>();
+
     if (!splash.hasSeenIntro) {
       Get.offAllNamed(RouteHelper.onBoarding);
-    } else if (auth.isLoggedIn()) {
-      Get.offAllNamed(RouteHelper.getMainRoute('dashboard'));
-    } else {
-      Get.offAllNamed(RouteHelper.getSignInRoute());
+      return;
     }
+
+    if (!auth.isLoggedIn()) {
+      Get.offAllNamed(RouteHelper.getSignInRoute());
+      return;
+    }
+
+    // Warm-up: prefetch /api/v1/merchant/profile so the dashboard header has
+    // the merchant name on first paint. Capped at 4 s so a slow backend
+    // doesn't strand the splash — we route either way.
+    try {
+      await auth.fetchProfile().timeout(const Duration(seconds: 4));
+    } catch (_) {
+      // Swallow — profile data is non-blocking for routing.
+    }
+
+    Get.offAllNamed(RouteHelper.getMainRoute('dashboard'));
   }
 
   @override

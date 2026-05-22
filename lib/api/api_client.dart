@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -9,12 +10,17 @@ import 'package:moonjoin_cloud/api/api_checker.dart';
 import 'package:moonjoin_cloud/common/models/error_response.dart';
 import 'package:moonjoin_cloud/util/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 class ApiClient extends GetxService {
   final String appBaseUrl;
   final SharedPreferences sharedPreferences;
   static String noInternetMessage = 'connection_to_api_server_failed'.tr;
-  final int timeoutInSeconds = 40;
+
+  /// Default per-request timeout. Long-polling screens override per call.
+  final int timeoutInSeconds = 15;
+
+  static const _uuid = Uuid();
 
   String? token;
   late Map<String, String> _mainHeaders;
@@ -50,34 +56,54 @@ class ApiClient extends GetxService {
     return header;
   }
 
+  /// GET with a single retry on connection / timeout errors.
+  ///
+  /// GETs are idempotent so retrying is safe. State-changing verbs do NOT
+  /// retry — they rely on the server-side merchant.idempotency middleware.
   Future<Response> getData(
     String uri, {
     Map<String, dynamic>? query,
     Map<String, String>? headers,
     bool handleError = true,
+    int? timeoutSeconds,
   }) async {
+    final timeout = Duration(seconds: timeoutSeconds ?? timeoutInSeconds);
+    final target = Uri.parse(appBaseUrl + uri).replace(
+      queryParameters: query?.map((k, v) => MapEntry(k, v.toString())),
+    );
+
+    Future<http.Response> attempt() => http
+        .get(target, headers: headers ?? _mainHeaders)
+        .timeout(timeout);
+
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print('====> API Call: $uri\nHeader: ${headers ?? _mainHeaders}');
+    }
+
     try {
-      if (kDebugMode) {
-        // ignore: avoid_print
-        print('====> API Call: $uri\nHeader: ${headers ?? _mainHeaders}');
-      }
-      final response = await http
-          .get(
-            Uri.parse(appBaseUrl + uri).replace(
-              queryParameters: query?.map(
-                (key, value) => MapEntry(key, value.toString()),
-              ),
-            ),
-            headers: headers ?? _mainHeaders,
-          )
-          .timeout(Duration(seconds: timeoutInSeconds));
+      final response = await attempt();
       return handleResponse(response, uri, handleError);
-    } catch (e) {
-      if (kDebugMode) {
-        // ignore: avoid_print
-        print('------------${e.toString()}');
+    } on TimeoutException catch (_) {
+      // Retry once on timeout.
+      try {
+        final response = await attempt();
+        return handleResponse(response, uri, handleError);
+      } catch (_) {
+        return Response(statusCode: 1, statusText: noInternetMessage);
       }
-      return Response(statusCode: 1, statusText: noInternetMessage);
+    } catch (e) {
+      // Network / DNS failures — retry once.
+      try {
+        final response = await attempt();
+        return handleResponse(response, uri, handleError);
+      } catch (_) {
+        if (kDebugMode) {
+          // ignore: avoid_print
+          print('------------${e.toString()}');
+        }
+        return Response(statusCode: 1, statusText: noInternetMessage);
+      }
     }
   }
 
@@ -89,9 +115,10 @@ class ApiClient extends GetxService {
     bool handleError = true,
   }) async {
     try {
+      final mergedHeaders = _withIdempotencyKey(headers ?? _mainHeaders);
       if (kDebugMode) {
         // ignore: avoid_print
-        print('====> API Call: $uri\nHeader: ${headers ?? _mainHeaders}');
+        print('====> API Call: $uri\nHeader: $mergedHeaders');
         // ignore: avoid_print
         print('====> API Body: $body');
       }
@@ -99,7 +126,7 @@ class ApiClient extends GetxService {
           .post(
             Uri.parse(appBaseUrl + uri),
             body: jsonEncode(body),
-            headers: headers ?? _mainHeaders,
+            headers: mergedHeaders,
           )
           .timeout(Duration(seconds: timeout ?? timeoutInSeconds));
       return handleResponse(response, uri, handleError);
@@ -118,7 +145,7 @@ class ApiClient extends GetxService {
     try {
       final request = http.MultipartRequest(
           'POST', Uri.parse(appBaseUrl + uri));
-      request.headers.addAll(headers ?? _mainHeaders);
+      request.headers.addAll(_withIdempotencyKey(headers ?? _mainHeaders));
       for (final multipart in multipartBody) {
         if (multipart.file != null) {
           final list = await multipart.file!.readAsBytes();
@@ -149,7 +176,7 @@ class ApiClient extends GetxService {
           .put(
             Uri.parse(appBaseUrl + uri),
             body: jsonEncode(body),
-            headers: headers ?? _mainHeaders,
+            headers: _withIdempotencyKey(headers ?? _mainHeaders),
           )
           .timeout(Duration(seconds: timeoutInSeconds));
       return handleResponse(response, uri, handleError);
@@ -167,13 +194,27 @@ class ApiClient extends GetxService {
       final response = await http
           .delete(
             Uri.parse(appBaseUrl + uri),
-            headers: headers ?? _mainHeaders,
+            headers: _withIdempotencyKey(headers ?? _mainHeaders),
           )
           .timeout(Duration(seconds: timeoutInSeconds));
       return handleResponse(response, uri, handleError);
     } catch (_) {
       return Response(statusCode: 1, statusText: noInternetMessage);
     }
+  }
+
+  /// Adds a UUID v4 `Idempotency-Key` header to state-changing requests so
+  /// the Phase A `merchant.idempotency` middleware can deduplicate retries.
+  /// Skipped when the caller already provided one (e.g. funding flow that
+  /// wants to reuse the same key across a redirect round-trip).
+  Map<String, String> _withIdempotencyKey(Map<String, String> base) {
+    if (base.containsKey('Idempotency-Key')) {
+      return base;
+    }
+    return {
+      ...base,
+      'Idempotency-Key': _uuid.v4(),
+    };
   }
 
   Response handleResponse(http.Response response, String uri, bool handleError) {

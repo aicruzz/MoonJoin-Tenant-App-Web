@@ -13,6 +13,11 @@ import 'package:moonjoin_cloud/features/auth/domain/repositories/auth_repository
 import 'package:moonjoin_cloud/features/auth/domain/repositories/auth_repository_interface.dart';
 import 'package:moonjoin_cloud/features/auth/domain/services/auth_service.dart';
 import 'package:moonjoin_cloud/features/auth/domain/services/auth_service_interface.dart';
+import 'package:moonjoin_cloud/features/dashboard/controllers/dashboard_controller.dart';
+import 'package:moonjoin_cloud/features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:moonjoin_cloud/features/dashboard/domain/repositories/dashboard_repository_interface.dart';
+import 'package:moonjoin_cloud/features/dashboard/domain/services/dashboard_service.dart';
+import 'package:moonjoin_cloud/features/dashboard/domain/services/dashboard_service_interface.dart';
 import 'package:moonjoin_cloud/helper/network_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,6 +46,16 @@ Future<Map<String, Map<String, String>>> init() async {
         sharedPreferences: Get.find(),
       ));
   Get.lazyPut(() => AuthController(authService: Get.find()));
+
+  // Dashboard feature (Phase C)
+  Get.lazyPut<DashboardRepositoryInterface>(
+      () => DashboardRepository(apiClient: Get.find()));
+  Get.lazyPut<DashboardServiceInterface>(() => DashboardService(
+        dashboardRepo: Get.find<DashboardRepositoryInterface>(),
+      ));
+  Get.lazyPut(
+      () => DashboardController(dashboardService: Get.find()),
+      fenix: true);
 
   // Languages — load JSON from assets (currently English only).
   final Map<String, Map<String, String>> languages = {};

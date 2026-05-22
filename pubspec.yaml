@@ -75,6 +75,9 @@ dependencies:
   # Analytics charts (net-new for MoonJoin Cloud dashboard)
   fl_chart: ^0.68.0
 
+  # Idempotency-Key generation (Phase C)
+  uuid: ^4.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
