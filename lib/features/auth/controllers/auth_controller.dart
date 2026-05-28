@@ -4,6 +4,7 @@ import 'package:moonjoin_cloud/features/auth/domain/models/merchant_model.dart';
 import 'package:moonjoin_cloud/features/auth/domain/models/sign_up_body_model.dart';
 import 'package:moonjoin_cloud/features/auth/domain/models/social_login_body.dart';
 import 'package:moonjoin_cloud/features/auth/domain/services/auth_service_interface.dart';
+import 'package:moonjoin_cloud/features/notifications/services/push_service.dart';
 
 class AuthController extends GetxController implements GetxService {
   final AuthServiceInterface authService;
@@ -149,11 +150,23 @@ class AuthController extends GetxController implements GetxService {
         final raw = result.data['merchant'] ?? result.data['data'] ?? result.data;
         _merchant = MerchantModel.fromJson(Map<String, dynamic>.from(raw));
         update();
+        // Best-effort push registration once we have a logged-in merchant.
+        if (Get.isRegistered<PushService>()) {
+          // ignore: discarded_futures
+          Get.find<PushService>().register();
+        }
       } catch (_) {}
     }
   }
 
   Future<void> logout() async {
+    if (Get.isRegistered<PushService>()) {
+      try {
+        await Get.find<PushService>().unregister();
+      } catch (_) {
+        // Never block logout on push cleanup.
+      }
+    }
     await authService.clearSession();
     _merchant = null;
     _pendingIdentifier = null;

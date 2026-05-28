@@ -5,61 +5,68 @@ class AppConstants {
   static const String fontFamily = 'Roboto';
 
   // Base URLs are resolved per-env in `lib/config/environment.dart`.
-  // These constants only describe URI paths appended to the base URL.
+  // These constants describe URI paths appended to the base URL.
+  //
+  // All merchant REST endpoints live under `/api/v1/merchant/*` per the
+  // Phase A controllers in `app/Http/Controllers/Api/V1/Merchant/`.
 
-  /// Merchant auth (existing on Laravel backend)
-  static const String registerUri = '/api/merchant/register';
-  static const String loginUri = '/api/merchant/login';
-  static const String otpSendUri = '/api/merchant/otp/send';
-  static const String otpVerifyUri = '/api/merchant/otp/verify';
-  static const String googleAuthUri = '/api/merchant/auth/google';
-  static const String forgotPasswordUri = '/api/merchant/forgot-password';
-  static const String resetPasswordUri = '/api/merchant/reset-password';
+  /// Merchant auth (Phase A — EXISTS).
+  static const String registerUri = '/api/v1/merchant/register';
+  static const String loginUri = '/api/v1/merchant/login';
+  static const String otpSendUri = '/api/v1/merchant/otp/send';
+  static const String otpVerifyUri = '/api/v1/merchant/otp/verify';
+  static const String googleAuthUri = '/api/v1/merchant/auth/google';
+  static const String forgotPasswordUri = '/api/v1/merchant/forgot-password';
+  static const String resetPasswordUri = '/api/v1/merchant/reset-password';
 
-  /// Merchant profile (BLOCKED on backend; client wired)
-  static const String profileUri = '/api/merchant/profile';
+  /// Merchant profile.
+  static const String profileUri = '/api/v1/merchant/profile';
 
-  /// Wallet (BLOCKED on backend)
-  static const String walletBalanceUri = '/api/merchant/wallet/balance';
-  static const String walletTransactionsUri = '/api/merchant/wallet/transactions';
-  static const String walletFundInitiateUri = '/api/merchant/wallet/fund/initiate';
-  static const String walletVirtualAccountUri = '/api/merchant/wallet/virtual-account';
+  /// Wallet.
+  static const String walletBalanceUri = '/api/v1/merchant/wallet/balance';
+  static const String walletTransactionsUri =
+      '/api/v1/merchant/wallet/transactions';
+  static const String walletFundInitiateUri =
+      '/api/v1/merchant/wallet/fund/initiate';
+  static const String walletVirtualAccountUri =
+      '/api/v1/merchant/wallet/virtual-account';
 
-  /// API products & keys (BLOCKED on backend; logic exists as web routes)
-  static const String apiProductsUri = '/api/merchant/api-products';
-  static const String apiKeysUri = '/api/merchant/api-keys';
-  static const String apiKeyRotateUri = '/api/merchant/api-keys/rotate';
-  static const String apiKeyRevokeUri = '/api/merchant/api-keys/revoke';
+  /// API products. Per-product sub-paths are composed inline by the repository
+  /// (`<apiProductsUri>/{id}/...`) since they all require an interpolated id.
+  static const String apiProductsUri = '/api/v1/merchant/api-products';
 
-  /// Webhook config (BLOCKED on backend)
-  static const String webhookConfigUri = '/api/merchant/webhook-config';
-  static const String webhookTestUri = '/api/merchant/webhooks/test';
-
-  /// Partner delivery + webhook log (EXISTS on backend)
+  /// Partner delivery + webhook log (EXISTS, partner-key auth).
   static const String partnerOrdersUri = '/api/v1/partner/orders';
   static const String partnerWebhookDeliveriesUri =
       '/api/v1/partner/webhooks/deliveries';
 
-  /// Deliveries (session-auth wrapper — BLOCKED on backend)
-  static const String deliveriesUri = '/api/merchant/deliveries';
+  /// Deliveries (session-auth wrapper).
+  static const String deliveriesUri = '/api/v1/merchant/deliveries';
 
-  /// Analytics (BLOCKED on backend)
-  static const String analyticsSummaryUri = '/api/merchant/analytics/summary';
-  static const String analyticsOrdersUri = '/api/merchant/analytics/orders';
+  /// Analytics.
+  static const String analyticsSummaryUri =
+      '/api/v1/merchant/analytics/summary';
+  static const String analyticsOrdersUri =
+      '/api/v1/merchant/analytics/orders';
   static const String analyticsSuccessRateUri =
-      '/api/merchant/analytics/success-rate';
+      '/api/v1/merchant/analytics/success-rate';
   static const String analyticsWebhooksUri =
-      '/api/merchant/analytics/webhooks';
+      '/api/v1/merchant/analytics/webhooks';
 
-  /// Zones & branches (BLOCKED on backend)
-  static const String zonesCheckUri = '/api/merchant/zones/check';
-  static const String branchesUri = '/api/merchant/branches';
+  /// Zones & branches.
+  static const String zonesCheckUri = '/api/v1/merchant/zones/check';
+  static const String branchesUri = '/api/v1/merchant/branches';
 
-  /// Notifications (FCM token + listing)
-  static const String notificationsUri = '/api/merchant/notifications';
-  static const String fcmTokenUri = '/api/merchant/fcm-token';
+  /// Notifications + FCM.
+  static const String notificationsUri = '/api/v1/merchant/notifications';
+  static const String fcmTokenUri = '/api/v1/merchant/fcm-token';
 
-  /// Shared-prefs keys (tenant-namespaced)
+  /// Disputes + tenant-initiated reassignment.
+  static const String disputesUri = '/api/v1/merchant/disputes';
+  static const String orderReassignmentUri =
+      '/api/v1/merchant/orders'; // composed: $orderReassignmentUri/{id}/reassign-request
+
+  /// Shared-prefs keys (tenant-namespaced).
   static const String theme = 'mjcloud_theme';
   static const String token = 'mjcloud_token';
   static const String tokenType = 'mjcloud_token_type';
@@ -74,14 +81,14 @@ class AppConstants {
   static const String acceptCookies = 'mjcloud_accept_cookies';
   static const String fcmToken = 'mjcloud_fcm_token';
 
-  /// HTTP headers
+  /// HTTP headers.
   static const String localizationKey = 'X-localization';
   static const String authorization = 'Authorization';
 
-  /// FCM topic
+  /// FCM topic.
   static const String fcmTopic = 'mjcloud_tenants';
 
-  /// MoonJoin Delivery API categories (single endpoint)
+  /// MoonJoin Delivery API categories (single endpoint).
   static const List<String> moonjoinCategories = [
     'food',
     'grocery',
@@ -90,7 +97,7 @@ class AppConstants {
     'parcel',
   ];
 
-  /// Modules Delivery API modules (separate endpoints)
+  /// Modules Delivery API modules (separate endpoints).
   static const List<String> deliveryModules = [
     'fuel',
     'gas',
@@ -105,5 +112,27 @@ class AppConstants {
     'flutterwave',
     'monnify',
     '9psb',
+  ];
+
+  /// Supported API product types per Phase A controller validation.
+  static const List<String> apiProductTypes = [
+    'moonjoin_delivery',
+    'modules_delivery',
+  ];
+
+  /// API product status values (Phase A `ApiProductService` lifecycle).
+  static const List<String> apiProductStatuses = [
+    'draft',
+    'pending',
+    'active',
+    'suspended',
+  ];
+
+  /// Webhook delivery statuses (Phase A `ApiProductWebhookDelivery` constants).
+  static const List<String> webhookStatuses = [
+    'pending',
+    'delivered',
+    'failed',
+    'exhausted',
   ];
 }

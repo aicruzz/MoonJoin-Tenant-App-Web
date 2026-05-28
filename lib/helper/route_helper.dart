@@ -12,6 +12,13 @@ import 'package:moonjoin_cloud/features/notifications/screens/notifications_scre
 import 'package:moonjoin_cloud/features/onboarding/screens/onboarding_screen.dart';
 import 'package:moonjoin_cloud/features/settings/screens/settings_screen.dart';
 import 'package:moonjoin_cloud/features/splash/screens/splash_screen.dart';
+import 'package:moonjoin_cloud/features/wallet/domain/models/fund_session_model.dart';
+import 'package:moonjoin_cloud/features/wallet/screens/fund_wallet_webview_screen.dart';
+import 'package:moonjoin_cloud/features/api_products/screens/api_product_create_screen.dart';
+import 'package:moonjoin_cloud/features/api_products/screens/api_product_detail_screen.dart';
+import 'package:moonjoin_cloud/features/deliveries/screens/delivery_detail_screen.dart';
+import 'package:moonjoin_cloud/features/branches/screens/branch_edit_screen.dart';
+import 'package:moonjoin_cloud/features/disputes/screens/dispute_create_screen.dart';
 
 class RouteHelper {
   static const String initial = '/';
@@ -25,6 +32,12 @@ class RouteHelper {
   static const String main = '/main';
   static const String notifications = '/notifications';
   static const String settings = '/settings';
+  static const String fundWalletWebView = '/wallet/fund-webview';
+  static const String apiProductCreate = '/api-products/create';
+  static const String apiProductDetail = '/api-products/detail';
+  static const String deliveryDetail = '/deliveries/detail';
+  static const String branchEdit = '/branches/edit';
+  static const String disputeCreate = '/disputes/create';
 
   static String getInitialRoute() => initial;
   static String getSplashRoute() => splash;
@@ -91,6 +104,60 @@ class RouteHelper {
       name: settings,
       page: () => _guard(const SettingsScreen()),
       transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: fundWalletWebView,
+      page: () {
+        final args = Get.arguments;
+        if (args is! FundSessionModel) {
+          return const NotFound();
+        }
+        return _guard(FundWalletWebViewScreen(session: args));
+      },
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: apiProductCreate,
+      page: () => _guard(const ApiProductCreateScreen()),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: apiProductDetail,
+      page: () {
+        final raw = Get.parameters['id'];
+        final id = int.tryParse(raw ?? '');
+        if (id == null) return const NotFound();
+        return _guard(ApiProductDetailScreen(productId: id));
+      },
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: deliveryDetail,
+      page: () {
+        final raw = Get.parameters['id'];
+        final id = int.tryParse(raw ?? '');
+        if (id == null) return const NotFound();
+        return _guard(DeliveryDetailScreen(orderId: id));
+      },
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: branchEdit,
+      page: () {
+        final raw = Get.parameters['id'];
+        final id = raw == null || raw.isEmpty ? null : int.tryParse(raw);
+        return _guard(BranchEditScreen(branchId: id));
+      },
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: disputeCreate,
+      page: () {
+        final raw = Get.parameters['orderId'];
+        final id = raw == null || raw.isEmpty ? null : int.tryParse(raw);
+        return _guard(DisputeCreateScreen(presetOrderId: id));
+      },
+      transition: Transition.rightToLeft,
     ),
     GetPage(name: '/not-found', page: () => const NotFound()),
   ];

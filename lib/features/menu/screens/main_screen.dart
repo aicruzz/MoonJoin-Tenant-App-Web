@@ -7,6 +7,7 @@ import 'package:moonjoin_cloud/features/auth/controllers/auth_controller.dart';
 import 'package:moonjoin_cloud/features/branches/screens/branches_screen.dart';
 import 'package:moonjoin_cloud/features/dashboard/screens/dashboard_screen.dart';
 import 'package:moonjoin_cloud/features/deliveries/screens/deliveries_screen.dart';
+import 'package:moonjoin_cloud/features/notifications/controllers/notifications_controller.dart';
 import 'package:moonjoin_cloud/features/profile/screens/profile_screen.dart';
 import 'package:moonjoin_cloud/features/wallet/screens/wallet_screen.dart';
 import 'package:moonjoin_cloud/features/webhooks/screens/webhooks_screen.dart';
@@ -86,10 +87,7 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         title: Text(_items[_index].label),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () => Get.toNamed(RouteHelper.notifications),
-          ),
+          const _NotificationBell(),
           IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         ],
       ),
@@ -239,10 +237,7 @@ class _TopBar extends StatelessWidget {
             onPressed: theme.toggleTheme,
           );
         }),
-        IconButton(
-          icon: const Icon(Icons.notifications_none),
-          onPressed: () => Get.toNamed(RouteHelper.notifications),
-        ),
+        const _NotificationBell(),
         const SizedBox(width: Dimensions.paddingSizeSmall),
         CircleAvatar(
           backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.15),
@@ -250,5 +245,49 @@ class _TopBar extends StatelessWidget {
         ),
       ]),
     );
+  }
+}
+
+/// Bell icon with an unread badge driven by `NotificationsController.unread`.
+class _NotificationBell extends StatelessWidget {
+  const _NotificationBell();
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<NotificationsController>(builder: (controller) {
+      final unread = controller.unread;
+      return IconButton(
+        tooltip: unread > 0 ? '$unread unread' : 'Notifications',
+        onPressed: () => Get.toNamed(RouteHelper.notifications),
+        icon: Stack(clipBehavior: Clip.none, children: [
+          const Icon(Icons.notifications_none),
+          if (unread > 0)
+            Positioned(
+              right: -4,
+              top: -2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCC2A36),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: Theme.of(context).cardColor, width: 1.5),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  unread > 99 ? '99+' : '$unread',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+            ),
+        ]),
+      );
+    });
   }
 }

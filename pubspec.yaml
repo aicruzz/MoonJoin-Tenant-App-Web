@@ -23,9 +23,14 @@ dependencies:
   connectivity_plus: ^5.0.2
 
   # Firebase (new dedicated MoonJoin Cloud project)
-  firebase_core: ^2.31.1
-  firebase_messaging: ^14.9.3
-  firebase_crashlytics: ^3.5.7
+  # Upgraded from 2.x/14.x/3.x to the Firebase iOS 11.x line because the older
+  # plugins ship `#import <Firebase/Firebase.h>` (non-modular) in their public
+  # framework headers, which Xcode 16 rejects even with
+  # CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES=YES set on every
+  # Pods target. The 4.x/16.x/5.x line uses `@import Firebase;` instead.
+  firebase_core: ^4.2.1
+  firebase_messaging: ^16.0.4
+  firebase_crashlytics: ^5.0.5
   flutter_local_notifications: ^17.1.2
 
   # Web/PWA
@@ -37,7 +42,8 @@ dependencies:
   # Auth
   google_sign_in: ^6.2.1
   google_sign_in_web: ^0.12.4
-  sign_in_with_apple: ^4.3.0
+  # 4.3.0 used Flutter V1 embedding (Registrar). 6.x+ migrated to V2.
+  sign_in_with_apple: ^6.1.4
 
   # Forms / UI primitives
   pin_code_fields: ^8.0.1
@@ -59,12 +65,19 @@ dependencies:
   geolocator: ^10.1.0
 
   # WebView (fund-wallet flow with Paystack / Flutterwave / Monnify)
-  flutter_inappwebview: ^5.8.0
+  # 6.x is required for Xcode 16+ — the 5.x Swift code uses an evaluateJavaScript
+  # overload that became ambiguous in the iOS 17/18 SDK. Pinned below 6.1.4
+  # because 6.1.4+ pulls a flutter_inappwebview_ios that conflicts with the
+  # Firebase 10.x line (matching firebase_messaging 14.9.x in this pubspec).
+  flutter_inappwebview: ">=6.0.0 <6.1.4"
   url_launcher: ^6.1.2
 
   # Media / images
   image_picker: ^1.0.7
-  image_compression_flutter: ^1.0.4
+  # image_compression_flutter removed in RC1: 1.0.4 uses the Flutter V1
+  # `Registrar` API which newer Flutter SDKs no longer ship. Package is not
+  # referenced anywhere in lib/. If image compression is needed later, use
+  # `flutter_image_compress` directly (already supports V2 embedding).
   image: ^4.2.0
 
   # Formatting
@@ -77,6 +90,24 @@ dependencies:
 
   # Idempotency-Key generation (Phase C)
   uuid: ^4.0.0
+
+# -----------------------------------------------------------------------------
+# RC1 stability override: pin google_sign_in_ios <= 5.8.1.
+#
+# google_sign_in_ios 5.9.0+ bumped its CocoaPods dep to `GoogleSignIn ~> 8.0`,
+# which transitively pulls AppCheckCore 11.x → GoogleUtilities/Environment 8.x.
+# That clashes with firebase_messaging 14.9.x (Firebase iOS 10.25), which pins
+# GoogleUtilities/Environment ~> 7.x.
+#
+# 5.8.1 still uses GoogleSignIn ~> 7.1 (no AppCheckCore in the graph), which
+# resolves cleanly against Firebase 10.25.
+#
+# Remove this override when the Firebase plugins are upgraded to ^4.x / ^16.x
+# (Firebase iOS 11.x ecosystem) — both sides will use GoogleUtilities 8.x and
+# the conflict goes away naturally.
+# -----------------------------------------------------------------------------
+dependency_overrides:
+  google_sign_in_ios: 5.8.1
 
 dev_dependencies:
   flutter_test:

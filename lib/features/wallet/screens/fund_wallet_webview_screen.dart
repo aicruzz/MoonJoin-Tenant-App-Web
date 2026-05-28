@@ -84,8 +84,8 @@ class _FundWalletWebViewScreenState extends State<FundWalletWebViewScreen> {
         child: isWeb
             ? _WebFallback(session: widget.session)
             : InAppWebView(
-                initialUrlRequest:
-                    URLRequest(url: WebUri(widget.session.authorizationUrl)),
+                initialUrlRequest: URLRequest(
+                    url: WebUri(widget.session.authorizationUrl)),
                 initialSettings: InAppWebViewSettings(
                   useShouldOverrideUrlLoading: true,
                   javaScriptEnabled: true,

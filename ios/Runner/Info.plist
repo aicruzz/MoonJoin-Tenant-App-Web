@@ -45,5 +45,22 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>MAPS_API_KEY</key>
+	<string>$(MAPS_API_KEY)</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>MoonJoin Cloud uses your location to pre-fill branch addresses and verify delivery coverage.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>MoonJoin Cloud uses your location to pre-fill branch addresses and verify delivery coverage.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>MoonJoin Cloud uses the camera to attach proof-of-delivery photos when raising a dispute.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MoonJoin Cloud uses your photo library to attach images when raising a dispute.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 </dict>
 </plist>

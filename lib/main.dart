@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:ui';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:moonjoin_cloud/common/controllers/localization_controller.dart';
@@ -23,13 +25,34 @@ Future<void> main() async {
   setPathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase is intentionally NOT wired here in Phase 0. The new dedicated
-  // MoonJoin Cloud Firebase project will be added once `google-services.json`
-  // and `GoogleService-Info.plist` are dropped under `firebase/<env>/`.
-  // See Phase 5 of the plan.
+  // Firebase + Crashlytics — guarded so the app boots even when configs are
+  // missing. When `google-services.json` / `GoogleService-Info.plist` are
+  // dropped into the per-env folders and the Maps key is set, the rest of
+  // the integration lights up automatically.
+  await _bootFirebase();
 
   final languages = await di.init();
   runApp(MoonJoinCloudApp(languages: languages));
+}
+
+Future<void> _bootFirebase() async {
+  try {
+    await Firebase.initializeApp();
+    if (!kDebugMode && !kIsWeb) {
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print(
+          'Firebase not initialized — push & crash reports disabled until configs are deployed. ($e)');
+    }
+  }
 }
 
 class MoonJoinCloudApp extends StatelessWidget {
