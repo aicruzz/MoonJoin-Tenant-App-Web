@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.moonjoin.moonjoin_cloud"
+    namespace = "com.moonjoin.cloud"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -23,7 +23,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.moonjoin.moonjoin_cloud"
+        applicationId = "com.moonjoin.cloud"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

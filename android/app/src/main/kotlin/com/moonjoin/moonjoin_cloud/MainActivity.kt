@@ -1,4 +1,4 @@
-package com.moonjoin.moonjoin_cloud
+package com.moonjoin.cloud
 
 import io.flutter.embedding.android.FlutterActivity
 

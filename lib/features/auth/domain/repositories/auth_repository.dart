@@ -18,7 +18,9 @@ class AuthRepository implements AuthRepositoryInterface {
   Future<Response> login({required String email, required String password}) =>
       apiClient.postData(
         AppConstants.loginUri,
-        {'email': email, 'password': password},
+        // Backend login validates `email_or_phone`; the sign-in form supplies
+        // an email but the field accepts either an email or a phone number.
+        {'email_or_phone': email, 'password': password},
         handleError: false,
       );
 
